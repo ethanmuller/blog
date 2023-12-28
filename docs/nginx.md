@@ -1,29 +1,41 @@
-# Setting up a website on Linux in 2024
+# Setting up a website in 2024
 
 Google and Apple control the Play Store and the App Store respectively. To
 publish an app, you have to get Google's or Apple's permission. You also need
 to pay them money for the privilege of adding content to their storefronts. You
-also need to pay them a 30% commission on top of that. They own the
-storefronts, so they make the rules.
+also need to pay them a 30% commission on top of that. You also have to ask
+permission in order to push updates to users. They own the storefronts, so they
+make the rules.
 
-Websites are different. There is no single organization that hosts The Web, so
-you can publish a website without anybody's permission.  I find this
+Websites are different. There is no single organization that hosts [The
+Web](https://en.wikipedia.org/wiki/Internet_backbone#/media/File:Internet_map_1024.jpg),
+so you can publish a website without anybody's permission.  I find this
 empowering. Web development is a much quicker way to get creations in front of
 people. **You can't publish a new app today, but you can publish a new website
 today.**
 
 Here's an overview on how to set up a website on Linux. Note that you don't
-have to be using Linux on your own computer&mdash;it's only needed on the
-server.
+have to be running Linux on your own computer&mdash;it's what we're using for
+the server. If you can open a terminal, you can connect via
+[`ssh`](https://twitter.com/metakuna/status/1477664478061867014). This works on
+Windows, macOS, and even iOS and Android.
 
 You don't have to follow along step-by-step; this is meant to be more of an
-introduction to these technologies so you understand how they fit together. <small>It's also a reference for myself for when I inevitably forget how to do this.</small>
+introduction to these technologies so you understand how they fit together.
+<small>It's also a reference for myself for when I inevitably forget how to do this.</small>
 
 ## This is the hard way
 
-There are much easier ways to throw a website up onto The Web. [Vercel](https://vercel.com/) and [Netlify](https://www.netlify.com/) are two popular choices. However, I'd rather show you how to do it from scratch.
+There are much easier ways to throw a website up onto The Web.
+[Vercel](https://vercel.com/) and [Netlify](https://www.netlify.com/) are two popular choices.
+They can both deploy websites straight from Github, which is a very common and useful workflow.
 
-It's worth learning how to host websites the hard way because the skills you learn along the way are generalized, and the end result is much more flexible.
+However, I'd rather show you how to serve web content outside of these
+services. It's worth learning how to host websites the hard way because the
+skills you learn along the way are generalized, and the end result is much more
+flexible. We aren't just publishing a website&mdash;we're setting up a
+general-purpose server that happens to serve web content when browsers ask for
+it.
 
 ## Servers and IP addresses and domain names
 
@@ -33,15 +45,26 @@ access it by typing an address into their browser? I need two things:
 1. **A computer that can serve my website** (`sudo` access required)
 2. **A domain name**
 
-**For my computer:** I pay for a <abbr title="virtual private
+**For my computer:** I pay $5/month for a <abbr title="virtual private
 server">VPS</abbr> to access a server that is always running. I use `ssh` to
 log into it, which is just like opening a terminal window, except it can be
 done remotely. This VPS is the computer I serve my website from.
+I use [Linode](https://www.linode.com/) but another popular one is
+[DigitalOcean](https://www.digitalocean.com/).
 
-**For my domain name:** I also bought the domain name `mush.network` in order to
-point it at my server's public IP address: `172.234.84.182`. To do this, I
-logged into my domain name provider and made a DNS record with a type of `A`
-and a value of `172.234.84.182`.
+If you want to save money, you could even run one of these computers in your
+own house. However, you'll have to handle some networking hurdles that are
+beyond the scope of this article. But if you have a computer that's reliably
+powered on, such as a Raspberry Pi, there's nothing stopping you from running
+your own web server in your house. Except maybe your roommate or your ISP or
+your government or something.
+
+**For my domain name:** I also bought the domain name `mush.network` in order
+to point it at my server's public IP address: `172.234.84.182`. No matter where
+you bought your domain name, you'll be able to log in to your account and
+change DNS Records. In this case, I want to create a DNS record with a type of
+`A` and a value of `172.234.84.182`. If you do this and `A` record already
+exists, edit the value to the intended IP address.
 
 After waiting a moment for this change to propagate, I can confirm my domain
 name points to my IP address by running the following command:
@@ -62,7 +85,7 @@ PING mush.network (172.234.84.182) 56(84) bytes of data.
 
 Cool. This proves the domain name is pointing to the right place.
 
-At this point, if we attempt to access this domain name in the browser, we'll get nothing. We have a server but we need a *web* server.
+At this point, if we attempt to access this domain name in the browser, we'll get nothing. We have a server but we want a *web* server.
 
 ## NGINX is a web server
 
@@ -98,7 +121,7 @@ to view it.
 
 ## Installing NGINX 
 
-Download NGINX from your distro's package manager. I'm on Arch Linux, so I do
+Download NGINX from your distro's package manager. My Linode instance runs Arch Linux, so I do
 this with:
 
 ```shell
@@ -120,7 +143,7 @@ your browser, you should now see NGINX's default page:
 
 > **Welcome to nginx!** If you see this page, the nginx web server is successfully installed and working. Further configuration is required.
 
-**We're in.** This means our browser can successfully get responses from NGINX. This is a cause for celebration.
+Note that at this point, the url must begin with `http://` and not `https://`. If you aren't seeing NGINX's default page, your browser might be redirecting you to `https://`, so try it in a private/incognito window.
 
 ## HTTPS in NGINX
 
@@ -136,7 +159,7 @@ add the following line just inside the `server` block in my NGINX config:
 server_name mush.network;
 ```
 
-And reload this change in NGINX
+And reload this change in NGINX:
  
 ```shell
 sudo systemctl reload nginx
@@ -158,7 +181,7 @@ This script might catch errors you've made while configuring, so pay close
 attention to the output.
 
 But if this command runs without errors, certificates are now set up. At this
-point, typing "mush.network" into my browser will direct me to the same default
+point, typing `mush.network` into my browser will direct me to the same default
 page as before, but this time through HTTPS, displaying that sweet sweet locked
 padlock next to the URL.
 
@@ -240,16 +263,11 @@ sudo systemctl reload nginx
 
 Now this page is visible directly from top-level [mush.network](https://mush.network).
 
-<footer>
-
 ## Further reading
 
-- [Internet Map](https://upload.wikimedia.org/wikipedia/commons/d/d2/Internet_map_1024.jpg)
 - [I built a PWA and published it in 3 app stores. Here's what I learned.](https://debuggerdotbreak.judahgabriel.com/2018/04/13/i-built-a-pwa-and-published-it-in-3-app-stores-heres-what-i-learned/)
 - [Better explanation of the role of HTTPS](https://blog.mozilla.org/en/products/firefox/https-protect/)
 - [NGINX Beginner's Guide](https://nginx.org/en/docs/beginners_guide.html)
 - [Command Line Crash Course](https://developer.mozilla.org/en-US/docs/Learn/Tools_and_testing/Understanding_client-side_tools/Command_line)
 - [Arch Linux Wiki](https://wiki.archlinux.org/)
 - [NGINX + Socket.IO](https://www.nginx.com/blog/nginx-nodejs-websockets-socketio/)
-
-</footer>
