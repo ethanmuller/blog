@@ -3,7 +3,7 @@
     "vitepress": "^1.0.0-rc.32"
   },
   "scripts": {
-    "dev": "vitepress dev docs",
+    "dev": "vitepress dev docs --port 3000",
     "build": "vitepress build docs",
     "serve": "vitepress serve docs"
   }
